@@ -1,23 +1,26 @@
 from flask import Flask, jsonify
 from solana.rpc.api import Client
-from solana.publickey import PublicKey
+from solders.pubkey import Pubkey
 
 app = Flask(__name__)
 client = Client("https://api.mainnet-beta.solana.com")
 
-RENT_RETURN_SOL = 0.002
+RENT_RETURN_SOL = 0.002  # возврат за 1 токен-аккаунт
+
 
 def load_wallets():
     with open("wallets.txt", "r") as f:
         return [line.strip() for line in f if line.strip()]
 
+
 def count_token_accounts(wallet):
-    pubkey = PublicKey(wallet)
+    pubkey = Pubkey.from_string(wallet)
     resp = client.get_token_accounts_by_owner(
         pubkey,
         {"programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}
     )
     return len(resp["result"]["value"])
+
 
 @app.route("/")
 def index():
@@ -36,6 +39,7 @@ def index():
         "return_sol": total_accounts * RENT_RETURN_SOL,
         "details": details
     })
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
